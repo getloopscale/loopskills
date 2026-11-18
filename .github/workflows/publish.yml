@@ -106,15 +106,20 @@ jobs:
       packages: write
       id-token: write
       attestations: write
-    uses: usetheoai/theo/.github/workflows/build-publish.yml@5e8033cf19fefa16ad23d6b29572d85be740ee5f # develop
+    # The public usetheoai/.github copy, as in theo-memory cb8fc88b. This repository is public,
+    # and GitHub refuses at load time, with no log, a call from a public repository to a
+    # reusable workflow in a private one: every develop publish since the call moved to the
+    # private usetheoai/theo failed that way ("workflow was not found").
+    uses: usetheoai/.github/.github/workflows/build-publish.yml@d6c4912d02a37fda477644c0b8f83cb3a317c0f3 # main
     with:
       image: theo-skills
       dockerfile: Dockerfile
       sign: true
-      # This reusable verifies the signature against ITS OWN path in the SAN and this
-      # repository in the caller claim, and it signs and verifies the ECR copy too
-      # (usetheoai/theo#461).
-      verify: true
+      # The signature is still produced. This copy (usetheoai/theo at 1596e81) verifies it
+      # against a SAN built from the CALLER's path, which a cross-repository call never
+      # matches, so `verify: true` would turn every run red after the push. It also predates
+      # usetheoai/theo#461, so the ECR copy is pushed unsigned until that change reaches it.
+      verify: false
       trivy: true
       # Amazon ECR, the registry the platform pulls from, by the full commit SHA tag
       # (usetheoai/theo#470). Both are repository VARIABLES; unset, the reusable skips ECR and
