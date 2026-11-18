@@ -27,15 +27,43 @@ const probeUri = (): string => {
 describeIntegration('runMigrations (schema autossuficiente na imagem)', () => {
   const admin = new Pool({ connectionString: uri });
 
-  const recreateProbeDb = async (): Promise<void> => {
+  // pg-pool resolves end() before its sockets close, so a session can still be on its way out
+  // when the next DROP runs. WITH (FORCE) would terminate it, and the 57P01 the server sends
+  // lands on a client without an error listener. Wait for the sessions to go instead.
+  const SESSION_CLOSE_TIMEOUT_MS = 10_000;
+  const waitForProbeSessionsToClose = async (): Promise<void> => {
+    const deadline = Date.now() + SESSION_CLOSE_TIMEOUT_MS;
+    for (;;) {
+      const res = await admin.query<{ open: number }>(
+        'SELECT count(*)::int AS open FROM pg_stat_activity WHERE datname = $1',
+        [PROBE_DB],
+      );
+      const open = res.rows[0]?.open ?? 0;
+      if (open === 0) return;
+      if (Date.now() > deadline) {
+        throw new Error(
+          `${open} session(s) on ${PROBE_DB} still open ${SESSION_CLOSE_TIMEOUT_MS} ms after their pools ended`,
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+  };
+
+  const dropProbeDb = async (): Promise<void> => {
+    await waitForProbeSessionsToClose();
+    // FORCE stays for a session a crashed earlier run left behind; this process has none by now.
     await admin.query(`DROP DATABASE IF EXISTS ${PROBE_DB} WITH (FORCE)`);
+  };
+
+  const recreateProbeDb = async (): Promise<void> => {
+    await dropProbeDb();
     await admin.query(`CREATE DATABASE ${PROBE_DB}`);
   };
 
   beforeAll(recreateProbeDb);
 
   afterAll(async () => {
-    await admin.query(`DROP DATABASE IF EXISTS ${PROBE_DB} WITH (FORCE)`);
+    await dropProbeDb();
     await admin.end();
   });
 
@@ -88,4 +116,20 @@ describeIntegration('runMigrations (schema autossuficiente na imagem)', () => {
       await Promise.all(pools.map((p) => p.end()));
     }
   });
+
+  it('drops the probe database after its pools end without terminating a closing session', async () => {
+    // pg-pool resolves end() once its clients leave the pool, before their sockets close. A
+    // DROP DATABASE ... WITH (FORCE) issued right after then terminates those sessions, and the
+    // server's 57P01 reaches a client that no longer has an error listener: Vitest reports it as
+    // an unhandled error and fails the whole run (observed in CI on this suite). The loop makes
+    // the race likely: locally, 13 of 100 cycles hit it without waiting, so 40 cycles miss it
+    // by chance well under 1% of the time.
+    for (let cycle = 0; cycle < 40; cycle += 1) {
+      await recreateProbeDb();
+      const pools = [0, 1, 2].map(() => new Pool({ connectionString: probeUri() }));
+      await Promise.all(pools.map((p) => p.query('SELECT 1')));
+      await Promise.all(pools.map((p) => p.end()));
+    }
+    await recreateProbeDb();
+  }, 60_000);
 });
