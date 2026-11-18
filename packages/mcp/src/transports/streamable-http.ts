@@ -261,10 +261,7 @@ export async function connectStreamableHttp(options: StreamableHttpOptions): Pro
             void s?.close();
           }
         };
-        // O SDK declara `onclose` como `(() => void) | undefined`, que não satisfaz
-        // `onclose?: () => void` da interface Transport sob `exactOptionalPropertyTypes`.
-        // Conversão estrutural restrita a esta fronteira de interoperabilidade.
-        await server.connect(transport as unknown as Parameters<typeof server.connect>[0]);
+        await server.connect(transport);
         await transport.handleRequest(req, res, body);
       } catch (err: unknown) {
         if (err instanceof BodyTooLargeError) {

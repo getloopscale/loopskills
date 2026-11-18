@@ -8,11 +8,15 @@ adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Security
+- **The production tree no longer carries the high and critical advisories published since September**: zod moves to 4.6.6 (GHSA-mrhx-c7xc-m3w5; no 3.x release is fixed), the MCP SDK to 1.32.2 (GHSA-6qxp-vccf-f47h, GHSA-22jm-h49p-29qw, GHSA-46jr-4wx8-v453, GHSA-f897-62hf-6gxq), and its express resolves proxy-addr 2.0.8 (GHSA-jqcg-44mw-7w3h, critical) and body-parser 2.4.0 (GHSA-27r3-jxmh-p828). (#157)
+- **The image no longer ships the five HIGH `fast-uri` vulnerabilities** (CVE-2026-75899, CVE-2026-75931, CVE-2026-75975, CVE-2026-76172, CVE-2026-84292) that failed its vulnerability scan. `fast-uri` reaches production through the MCP SDK's JSON schema validator; it is now resolved to 3.1.8, the fixed release in the range that validator declares, instead of 4.1.2. (#157)
 - **O isolamento entre inquilinos passou a ser aplicado pelo banco de dados.** Um cliente não consegue mais ler nem escrever skills, bundles e revisões de outro, mesmo que uma consulta esqueça o filtro. Antes não havia barreira alguma no banco: o que separava os dados era o filtro escrito à mão em cada consulta, e um esquecimento devolvia dados alheios sem erro, sem log e sem teste vermelho. Skills carregam código executável: a direção de ESCRITA importa tanto quanto a de leitura, porque plantar uma skill na biblioteca de outro cliente seria pior do que ler a dele. São 12 tabelas com política restritiva. A ausência de contexto agora devolve nada em vez de tudo. (migration 0016)
 - **O contexto do inquilino passou a viajar junto com a requisição**, vindo da credencial autenticada e nunca de algo que o cliente envia. É aplicado a cada conexão entregue aos repositórios, que não mudaram. Uma operação sem contexto **falha alto** em vez de devolver lista vazia — vazio é ambíguo e passa por "não há dados".
 - **A tabela de credenciais fica deliberadamente fora dessa proteção.** Resolver a credencial é o que DESCOBRE o inquilino: protegê-la por inquilino seria circular — seria preciso saber o inquilino para ler a linha que diz qual é o inquilino — e o efeito prático seria toda autenticação falhar. A decisão está registrada na própria migration, com o que protege a tabela no lugar disso.
 
 ### Added
+
+- **The image is also published to Amazon ECR**, the registry the platform pulls from, tagged with the full commit SHA, on every publish run. The ECR copy is keyless-signed and its signature verified like the GHCR one; GHCR publishing is unchanged. The shared build workflow is pinned to a version that requires the `attestations: write` scope, which the image job now grants. (usetheoai/theo#470)
 
 - **`GET /v1/health/ready`**, and `service` on the liveness body. The service answered liveness only — during a rolling deploy an instance whose Postgres or queue had not resolved answered 200, the orchestrator read that as ready, and traffic landed on it. Readiness probes both dependencies and names what it checked; it answers 503 when one is unavailable, while liveness stays 200 so a healthy process is not restarted over a dependency it cannot fix. (B-119)
 
@@ -22,6 +26,7 @@ adheres to [Semantic Versioning](https://semver.org/).
 - Plan `english-only-sweep` v1.2, SHIPPABLE (90.4). v1.0 was INVALID over four caps, three of them real defects in the plan itself — including a reference to a task `T4.3` that never existed
 
 ### Changed
+- **The contract schemas `@usetheo/skills` exports are now zod 4 schemas.** The values they parse and the types `z.infer` gives are unchanged; code that extends or composes them with zod 3 has to move to zod 4.6.6 or later. (#157)
 
 - The PR trigger is back on the three workflows whose checks branch protection requires — and only in this repository. The 2026-08-08 removal was applied across the whole umbrella, where it is harmless: no other repo has branch protection at all (the plan does not offer it on a private repository — measured: 403 on theo-trust, theo-memory, theo-rag, theo-lens, theo-promptly). This one is public and enforces three required checks, so the same removal produced a state nobody asked for: a required check that can no longer report on a PR leaves **every** PR `BLOCKED` forever. Measured on #154, green everywhere and unmergeable. The owner decision behind the removal was about `push` on `workspace`; that one stands and the push trigger stays out.
 
@@ -45,6 +50,8 @@ adheres to [Semantic Versioning](https://semver.org/).
 - `prototype/` left the repository: interface study, 17 files, and a second pnpm workspace nobody publishes. This capability's UI is built in `theo-cloud/dashboard` (#88d4fa4)
 
 ### Fixed
+
+- **Every CI and publish job starts again.** Five of the six jobs declared the Blacksmith runner label `blacksmith-8vcpu-ubuntu-2404`, and the organization has no runner serving it, so they sat queued until cancelled — the checks of #157 never ran. All jobs now run on GitHub-hosted `ubuntu-latest`, the default of the shared build workflow, and `.github/actionlint.yaml`, which only declared that label, is removed. (#157)
 
 - Three gate failures that only became visible when the PR trigger came back, all of them shipped blind while no event ran the gates on `workspace`: five lint errors (async arrows with no `await`, plus a parameter the function ignores by design — now an anonymous typed rest, saying in the type what a `_fn` name could not); the workflow-invariants suite reading a `build-publish.yml` this repo deleted when it paid off the vendored copy (the assertions moved with the file — what stays verifiable here is that the central workflow is pinned by immutable SHA, so its invariants cannot change without a diff in this repo); and the public API surface snapshot, stale by two names (`describeScope`, `tenantScopedPool`) that the tenant-isolation work exported without declaring.
 

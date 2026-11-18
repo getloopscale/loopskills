@@ -4,131 +4,83 @@ import { z } from 'zod';
  * Operation lifecycle states (M2). In-progress states reflect the job type
  * (CREATING/UPDATING/DELETING); terminal states are ACTIVE (succeeded) / FAILED.
  */
-export declare const OperationStateSchema: z.ZodEnum<["CREATING", "UPDATING", "DELETING", "ACTIVE", "FAILED"]>;
+export declare const OperationStateSchema: z.ZodEnum<{
+    CREATING: "CREATING";
+    UPDATING: "UPDATING";
+    DELETING: "DELETING";
+    ACTIVE: "ACTIVE";
+    FAILED: "FAILED";
+}>;
 export type OperationState = z.infer<typeof OperationStateSchema>;
 /** Webhook event types emitted on operation completion. */
-export declare const WebhookEventTypeSchema: z.ZodEnum<["skill.created", "skill.updated", "skill.deleted"]>;
+export declare const WebhookEventTypeSchema: z.ZodEnum<{
+    "skill.created": "skill.created";
+    "skill.updated": "skill.updated";
+    "skill.deleted": "skill.deleted";
+}>;
 export type WebhookEventType = z.infer<typeof WebhookEventTypeSchema>;
 /** Webhook payload delivered to subscribed endpoints. */
 export declare const WebhookPayloadSchema: z.ZodObject<{
     event_id: z.ZodString;
-    event_type: z.ZodEnum<["skill.created", "skill.updated", "skill.deleted"]>;
+    event_type: z.ZodEnum<{
+        "skill.created": "skill.created";
+        "skill.updated": "skill.updated";
+        "skill.deleted": "skill.deleted";
+    }>;
     data: z.ZodObject<{
         skill_id: z.ZodString;
         operation_id: z.ZodString;
-        state: z.ZodEnum<["ACTIVE", "FAILED"]>;
+        state: z.ZodEnum<{
+            ACTIVE: "ACTIVE";
+            FAILED: "FAILED";
+        }>;
         occurred_at: z.ZodString;
-    }, "strip", z.ZodTypeAny, {
-        skill_id: string;
-        operation_id: string;
-        state: "ACTIVE" | "FAILED";
-        occurred_at: string;
-    }, {
-        skill_id: string;
-        operation_id: string;
-        state: "ACTIVE" | "FAILED";
-        occurred_at: string;
-    }>;
-}, "strip", z.ZodTypeAny, {
-    event_id: string;
-    event_type: "skill.created" | "skill.updated" | "skill.deleted";
-    data: {
-        skill_id: string;
-        operation_id: string;
-        state: "ACTIVE" | "FAILED";
-        occurred_at: string;
-    };
-}, {
-    event_id: string;
-    event_type: "skill.created" | "skill.updated" | "skill.deleted";
-    data: {
-        skill_id: string;
-        operation_id: string;
-        state: "ACTIVE" | "FAILED";
-        occurred_at: string;
-    };
-}>;
+    }, z.core.$strip>;
+}, z.core.$strip>;
 export type WebhookPayload = z.infer<typeof WebhookPayloadSchema>;
 /** Input for POST /v1/webhookEndpoints. `event_types` empty/absent = all events. */
 export declare const WebhookEndpointCreateSchema: z.ZodObject<{
     url: z.ZodString;
-    event_types: z.ZodOptional<z.ZodArray<z.ZodEnum<["skill.created", "skill.updated", "skill.deleted"]>, "many">>;
-}, "strip", z.ZodTypeAny, {
-    url: string;
-    event_types?: ("skill.created" | "skill.updated" | "skill.deleted")[] | undefined;
-}, {
-    url: string;
-    event_types?: ("skill.created" | "skill.updated" | "skill.deleted")[] | undefined;
-}>;
+    event_types: z.ZodOptional<z.ZodArray<z.ZodEnum<{
+        "skill.created": "skill.created";
+        "skill.updated": "skill.updated";
+        "skill.deleted": "skill.deleted";
+    }>>>;
+}, z.core.$strip>;
 export type WebhookEndpointCreate = z.infer<typeof WebhookEndpointCreateSchema>;
 /** Public webhook-endpoint representation (secret is NEVER included here). */
 export declare const WebhookEndpointSchema: z.ZodObject<{
     id: z.ZodString;
     url: z.ZodString;
     active: z.ZodBoolean;
-    event_types: z.ZodNullable<z.ZodArray<z.ZodEnum<["skill.created", "skill.updated", "skill.deleted"]>, "many">>;
+    event_types: z.ZodNullable<z.ZodArray<z.ZodEnum<{
+        "skill.created": "skill.created";
+        "skill.updated": "skill.updated";
+        "skill.deleted": "skill.deleted";
+    }>>>;
     create_time: z.ZodString;
-}, "strip", z.ZodTypeAny, {
-    active: boolean;
-    url: string;
-    event_types: ("skill.created" | "skill.updated" | "skill.deleted")[] | null;
-    id: string;
-    create_time: string;
-}, {
-    active: boolean;
-    url: string;
-    event_types: ("skill.created" | "skill.updated" | "skill.deleted")[] | null;
-    id: string;
-    create_time: string;
-}>;
+}, z.core.$strip>;
 export type WebhookEndpoint = z.infer<typeof WebhookEndpointSchema>;
 /** Create response — the only time `secret` is ever returned. */
 export declare const WebhookEndpointCreatedSchema: z.ZodObject<{
     id: z.ZodString;
     url: z.ZodString;
     active: z.ZodBoolean;
-    event_types: z.ZodNullable<z.ZodArray<z.ZodEnum<["skill.created", "skill.updated", "skill.deleted"]>, "many">>;
+    event_types: z.ZodNullable<z.ZodArray<z.ZodEnum<{
+        "skill.created": "skill.created";
+        "skill.updated": "skill.updated";
+        "skill.deleted": "skill.deleted";
+    }>>>;
     create_time: z.ZodString;
-} & {
     secret: z.ZodString;
-}, "strip", z.ZodTypeAny, {
-    active: boolean;
-    url: string;
-    event_types: ("skill.created" | "skill.updated" | "skill.deleted")[] | null;
-    id: string;
-    create_time: string;
-    secret: string;
-}, {
-    active: boolean;
-    url: string;
-    event_types: ("skill.created" | "skill.updated" | "skill.deleted")[] | null;
-    id: string;
-    create_time: string;
-    secret: string;
-}>;
+}, z.core.$strip>;
 export type WebhookEndpointCreated = z.infer<typeof WebhookEndpointCreatedSchema>;
 /** Input payload for POST /v1/skills. Minimal in M0 (Theokit-aligned fields). */
-export declare const SkillInputSchema: z.ZodEffects<z.ZodObject<{
+export declare const SkillInputSchema: z.ZodObject<{
     skill_id: z.ZodString;
     name: z.ZodString;
     description: z.ZodDefault<z.ZodString>;
-}, "strip", z.ZodTypeAny, {
-    name: string;
-    description: string;
-    skill_id: string;
-}, {
-    name: string;
-    skill_id: string;
-    description?: string | undefined;
-}>, {
-    name: string;
-    description: string;
-    skill_id: string;
-}, {
-    name: string;
-    skill_id: string;
-    description?: string | undefined;
-}>;
+}, z.core.$strip>;
 export type SkillInput = z.infer<typeof SkillInputSchema>;
 /** Public skill representation (GET /v1/skills/{id}). */
 export declare const SkillSchema: z.ZodObject<{
@@ -136,78 +88,58 @@ export declare const SkillSchema: z.ZodObject<{
     name: z.ZodString;
     description: z.ZodString;
     state: z.ZodString;
-}, "strip", z.ZodTypeAny, {
-    name: string;
-    description: string;
-    skill_id: string;
-    state: string;
-}, {
-    name: string;
-    description: string;
-    skill_id: string;
-    state: string;
-}>;
+}, z.core.$strip>;
 export type Skill = z.infer<typeof SkillSchema>;
 /** Public operation representation (GET /v1/operations/{id}). */
 export declare const OperationSchema: z.ZodObject<{
     operation_id: z.ZodString;
     skill_id: z.ZodString;
     type: z.ZodString;
-    state: z.ZodEnum<["CREATING", "UPDATING", "DELETING", "ACTIVE", "FAILED"]>;
+    state: z.ZodEnum<{
+        CREATING: "CREATING";
+        UPDATING: "UPDATING";
+        DELETING: "DELETING";
+        ACTIVE: "ACTIVE";
+        FAILED: "FAILED";
+    }>;
     error: z.ZodNullable<z.ZodString>;
-}, "strip", z.ZodTypeAny, {
-    type: string;
-    skill_id: string;
-    operation_id: string;
-    state: "CREATING" | "UPDATING" | "DELETING" | "ACTIVE" | "FAILED";
-    error: string | null;
-}, {
-    type: string;
-    skill_id: string;
-    operation_id: string;
-    state: "CREATING" | "UPDATING" | "DELETING" | "ACTIVE" | "FAILED";
-    error: string | null;
-}>;
+}, z.core.$strip>;
 export type Operation = z.infer<typeof OperationSchema>;
 /** Retrieval strategy (M4). `hybrid` fuses lexical + vector via RRF. */
-export declare const RetrieveStrategySchema: z.ZodEnum<["vector", "keyword", "hybrid"]>;
+export declare const RetrieveStrategySchema: z.ZodEnum<{
+    vector: "vector";
+    keyword: "keyword";
+    hybrid: "hybrid";
+}>;
 export type RetrieveStrategy = z.infer<typeof RetrieveStrategySchema>;
 export declare const RetrieveParamsSchema: z.ZodObject<{
     query: z.ZodString;
-    top_k: z.ZodDefault<z.ZodNumber>;
-    strategy: z.ZodDefault<z.ZodEnum<["vector", "keyword", "hybrid"]>>;
+    top_k: z.ZodDefault<z.ZodCoercedNumber<unknown>>;
+    strategy: z.ZodDefault<z.ZodEnum<{
+        vector: "vector";
+        keyword: "keyword";
+        hybrid: "hybrid";
+    }>>;
     category: z.ZodOptional<z.ZodString>;
-    /**
-     * Opt-in do ciclo de vida (M32). Ausentes = o default seguro: só `active` e só habilitadas.
-     *
-     * Três flags independentes, e não um único `include_hidden`, porque as perguntas são
-     * diferentes: um autor conferindo os próprios rascunhos não quer ver as descontinuadas do
-     * time, e um operador auditando o que saiu de circulação não quer rascunho alheio no meio.
-     *
-     * `z.coerce.boolean()` seria uma armadilha aqui — ele considera QUALQUER string não-vazia
-     * verdadeira, então `include_draft=false` viria como `true`. A comparação explícita com
-     * `'true'`/`'1'` é o que faz a negação chegar como negação.
-     */
-    include_draft: z.ZodEffects<z.ZodOptional<z.ZodEnum<["true", "false", "1", "0"]>>, boolean, "0" | "1" | "true" | "false" | undefined>;
-    include_deprecated: z.ZodEffects<z.ZodOptional<z.ZodEnum<["true", "false", "1", "0"]>>, boolean, "0" | "1" | "true" | "false" | undefined>;
-    include_disabled: z.ZodEffects<z.ZodOptional<z.ZodEnum<["true", "false", "1", "0"]>>, boolean, "0" | "1" | "true" | "false" | undefined>;
-}, "strip", z.ZodTypeAny, {
-    query: string;
-    top_k: number;
-    strategy: "vector" | "keyword" | "hybrid";
-    include_draft: boolean;
-    include_deprecated: boolean;
-    include_disabled: boolean;
-    category?: string | undefined;
-}, {
-    query: string;
-    category?: string | undefined;
-    top_k?: number | undefined;
-    strategy?: "vector" | "keyword" | "hybrid" | undefined;
-    include_draft?: "0" | "1" | "true" | "false" | undefined;
-    include_deprecated?: "0" | "1" | "true" | "false" | undefined;
-    include_disabled?: "0" | "1" | "true" | "false" | undefined;
-}>;
+    include_draft: z.ZodPipe<z.ZodOptional<z.ZodEnum<{
+        0: "0";
+        1: "1";
+        true: "true";
+        false: "false";
+    }>>, z.ZodTransform<boolean, "0" | "1" | "true" | "false" | undefined>>;
+    include_deprecated: z.ZodPipe<z.ZodOptional<z.ZodEnum<{
+        0: "0";
+        1: "1";
+        true: "true";
+        false: "false";
+    }>>, z.ZodTransform<boolean, "0" | "1" | "true" | "false" | undefined>>;
+    include_disabled: z.ZodPipe<z.ZodOptional<z.ZodEnum<{
+        0: "0";
+        1: "1";
+        true: "true";
+        false: "false";
+    }>>, z.ZodTransform<boolean, "0" | "1" | "true" | "false" | undefined>>;
+}, z.core.$strip>;
 export type RetrieveParamsInput = z.infer<typeof RetrieveParamsSchema>;
 /** A scored retrieve result. Score semantics are STRATEGY-DEPENDENT (cosine for
  * vector ~0.7-1.0, ts_rank for keyword, RRF fraction ~1/60 for hybrid) — clients
@@ -217,39 +149,31 @@ export declare const RetrieveResultSchema: z.ZodObject<{
     score: z.ZodNumber;
     name: z.ZodString;
     description: z.ZodString;
-}, "strip", z.ZodTypeAny, {
-    score: number;
-    name: string;
-    description: string;
-    skill_id: string;
-}, {
-    score: number;
-    name: string;
-    description: string;
-    skill_id: string;
-}>;
+}, z.core.$strip>;
 export type RetrieveResult = z.infer<typeof RetrieveResultSchema>;
 /** Papéis de workspace (M13). */
-export declare const MemberRoleSchema: z.ZodEnum<["owner", "admin", "member"]>;
+export declare const MemberRoleSchema: z.ZodEnum<{
+    owner: "owner";
+    admin: "admin";
+    member: "member";
+}>;
 /** Corpo de `PATCH /v1/members/{userId}`. */
 export declare const MemberChangeRoleSchema: z.ZodObject<{
-    role: z.ZodEnum<["owner", "admin", "member"]>;
-}, "strip", z.ZodTypeAny, {
-    role: "owner" | "admin" | "member";
-}, {
-    role: "owner" | "admin" | "member";
-}>;
+    role: z.ZodEnum<{
+        owner: "owner";
+        admin: "admin";
+        member: "member";
+    }>;
+}, z.core.$strip>;
 /** Corpo de `PUT /v1/members`. */
 export declare const MemberAddSchema: z.ZodObject<{
     user_id: z.ZodString;
-    role: z.ZodEnum<["owner", "admin", "member"]>;
-}, "strip", z.ZodTypeAny, {
-    role: "owner" | "admin" | "member";
-    user_id: string;
-}, {
-    role: "owner" | "admin" | "member";
-    user_id: string;
-}>;
+    role: z.ZodEnum<{
+        owner: "owner";
+        admin: "admin";
+        member: "member";
+    }>;
+}, z.core.$strip>;
 
 // ==== domain/dip/auth-verifier.d.ts ====
 import { type Principal } from '../principal.js';

@@ -38,7 +38,7 @@
     "drizzle-orm": "^0.45.0",
     "pg": "^8.13.0",
     "yaml": "^2.8.4",
-    "zod": "^3.25.0",
+    "zod": "^4.6.6",
     "yauzl": "^3.3.0",
     "@secretlint/core": "^11.3.1",
     "@secretlint/secretlint-rule-preset-recommend": "^11.3.1"
