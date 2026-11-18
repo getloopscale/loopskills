@@ -36,10 +36,7 @@ async function conectar(url: string, bearer: string): Promise<Client> {
   const transport = new StreamableHTTPClientTransport(new URL(url), {
     requestInit: { headers: { authorization: `Bearer ${bearer}` } },
   });
-  // O transporte-cliente do SDK declara `sessionId: string | undefined`, que não satisfaz
-  // `Transport` sob `exactOptionalPropertyTypes`. Conversão restrita a esta fronteira de
-  // interoperabilidade — os nossos próprios tipos seguem estritos.
-  await client.connect(transport as unknown as Parameters<typeof client.connect>[0]);
+  await client.connect(transport);
   return client;
 }
 
