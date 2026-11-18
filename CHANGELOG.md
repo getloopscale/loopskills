@@ -26,6 +26,7 @@ adheres to [Semantic Versioning](https://semver.org/).
 - Plan `english-only-sweep` v1.2, SHIPPABLE (90.4). v1.0 was INVALID over four caps, three of them real defects in the plan itself — including a reference to a task `T4.3` that never existed
 
 ### Changed
+- **The contract schemas `@usetheo/skills` exports are now zod 4 schemas.** The values they parse and the types `z.infer` gives are unchanged; code that extends or composes them with zod 3 has to move to zod 4.6.6 or later. (#157)
 
 - The PR trigger is back on the three workflows whose checks branch protection requires — and only in this repository. The 2026-08-08 removal was applied across the whole umbrella, where it is harmless: no other repo has branch protection at all (the plan does not offer it on a private repository — measured: 403 on theo-trust, theo-memory, theo-rag, theo-lens, theo-promptly). This one is public and enforces three required checks, so the same removal produced a state nobody asked for: a required check that can no longer report on a PR leaves **every** PR `BLOCKED` forever. Measured on #154, green everywhere and unmergeable. The owner decision behind the removal was about `push` on `workspace`; that one stands and the push trigger stays out.
 
