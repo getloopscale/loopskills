@@ -61,7 +61,7 @@ jobs:
           if [ -z "$NPM_TOKEN" ]; then
             echo "::error::secrets.NPM_TOKEN ausente neste repositorio."
             echo "Sem ele o npm responde 404 (nao 401) e a falha se disfarca de 'pacote inexistente'."
-            echo "Configure com: gh secret set NPM_TOKEN -R usetheoai/theo-skills"
+            echo "Configure com: gh secret set NPM_TOKEN -R getloopscale/loopskills"
             exit 1
           fi
 
