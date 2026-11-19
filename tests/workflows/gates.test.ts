@@ -90,14 +90,14 @@ describe('publish.yml — gates encadeados', () => {
     // invariantes de lá poderiam mudar debaixo deste repo sem um único diff aqui — e a
     // verificação de assinatura é exatamente onde essa mudança silenciosa seria pior.
     //
-    // The central workflow lives in the PUBLIC usetheoai/.github. This repository is public,
+    // The central workflow lives in the PUBLIC getloopscale/.github. This repository is public,
     // and GitHub refuses at load time, with no log, a call from a public repository to a
     // reusable workflow in a private one: every develop publish failed that way while it
-    // pointed at the private usetheoai/theo.
-    const central = /uses:\s+usetheoai\/\.github\/\.github\/workflows\/build-publish\.yml@(\S+)/.exec(
+    // pointed at the private getloopscale/engine.
+    const central = /uses:\s+getloopscale\/\.github\/\.github\/workflows\/build-publish\.yml@(\S+)/.exec(
       readRaw('publish.yml'),
     );
-    expect(central, 'publish.yml must call build-publish from the public usetheoai/.github').not.toBeNull();
+    expect(central, 'publish.yml must call build-publish from the public getloopscale/.github').not.toBeNull();
     expect(
       central![1],
       'o workflow central tem de ser fixado por SHA de 40 caracteres, não por ref mutável',
@@ -225,7 +225,7 @@ describe('o artefato publicado é EXECUTADO antes de a tag mover', () => {
     const raw = readRaw('publish.yml');
     expect(existsSync(wf('build-publish.yml')), 'a cópia local voltou — a dívida de vendorização foi reintroduzida').toBe(false);
     expect(raw, 'the image job must come from the public central workflow').toContain(
-      'usetheoai/.github/.github/workflows/build-publish.yml@',
+      'getloopscale/.github/.github/workflows/build-publish.yml@',
     );
   });
 });
